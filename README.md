@@ -6,13 +6,34 @@ MyTJ Android 앱의 업데이트 배포용 저장소입니다.
 
 `https://github.com/noveljelly/MyTJ-Updates/releases/latest/download/update.json`
 
-MyTJ의 Cloudflare Worker에서 위 주소를 `UPDATE_MANIFEST_URL`로 사용합니다.
+Cloudflare Worker의 `UPDATE_MANIFEST_URL`에는 위 주소를 사용합니다.
 
-## 배포 구조
+## update.json 형식
 
-각 앱 버전은 GitHub Release로 배포하며 Release asset에는 다음 파일을 둡니다.
+```json
+{
+  "schemaVersion": 1,
+  "packageId": "com.example.mytj",
+  "versionCode": 5,
+  "versionName": "0.5.0",
+  "apkUrl": "https://github.com/noveljelly/MyTJ-Updates/releases/download/v5/MyTJ-0.5.0-5.apk",
+  "sha256": "<APK SHA-256 64자리>",
+  "sizeBytes": 12345678,
+  "minSdk": 26,
+  "notes": "업데이트 내용"
+}
+```
 
-- `update.json` — 앱이 읽는 최신 버전 정보
-- APK 파일 — 실제 설치 파일
+APK URL은 `latest` 주소가 아니라 해당 버전 Release의 고정 URL이어야 합니다.
 
-`update.json`의 필드 구조는 MyTJ 앱/Worker 소스가 요구하는 형식을 확인한 뒤 확정합니다. 잘못된 manifest가 최신 Release로 노출되지 않도록 임의 형식의 파일은 게시하지 않습니다.
+## 배포
+
+저장소의 `publish-update.ps1`은 APK에서 SHA-256과 파일 크기를 계산하고 `update.json`을 생성한 뒤 GitHub Release에 APK와 manifest를 함께 올립니다.
+
+예:
+
+```powershell
+.\publish-update.ps1 -ApkPath "C:\path\to\app-release.apk" -VersionCode 5 -VersionName "0.5.0" -Notes "테마 기능 및 사용성 개선"
+```
+
+앱은 다운로드한 APK의 패키지명, versionCode/versionName, minSdk, 파일 크기, SHA-256, 서명 인증서를 검증하므로 기존 설치본과 같은 서명 키를 유지해야 합니다.
